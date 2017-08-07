@@ -1,0 +1,23 @@
+{
+  "name": "websocket-client",
+  "version": "0.1.0",
+  "description": "Wrapper for browser based WebSocket class",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BB-L3TV/websocket-client.git"
+  },
+  "keywords": [
+    "websocket",
+    "browser"
+  ],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/BB-L3TV/websocket-client/issues"
+  },
+  "homepage": "https://github.com/BB-L3TV/websocket-client#readme"
+}
