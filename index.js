@@ -1,1 +1,1 @@
-require('./src/socket.js');
+export { default as Socket } from './src/socket.js';

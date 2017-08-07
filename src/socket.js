@@ -1,9 +1,14 @@
+import Emit from './emit';
 
-export default class Socket {
+export default class Socket extends Emit {
 
   constructor(opts) {
+    super();
 
     this.options = opts || {};
+
+    // if the user doesn't pass autoconnect then default it to true
+    this.options.autoConnect = this.options.autoConnect || true;
 
     if(!this.options.url) throw "No Socket URL Provided";
 
@@ -18,7 +23,9 @@ export default class Socket {
     this.socket = new WebSocket(opts.url);
 
     if(typeof this.onConnect === "function") {
-      this.socket.onopen = this.onConnect;
+      this.socket.addEventListener('open', () => {
+        this.onConnect();
+      });
     }
 
     return this;
@@ -40,16 +47,24 @@ export default class Socket {
     this.debug("Message Received", message);
 
     let ce = new CustomEvent('socket::message', message);
-    this.dispatch(ce);
+    this.dispatchEvent(ce);
   }
 
   onConnect() {
     this.debug('connection established, onConnect called');
 
     // setup the rest of our event handlers
-    this.socket.onclose = this.onDisconnect;
-    this.socket.onerror = this.onError;
-    this.socket.onmessage = this.onMessage;
+    this.socket.addEventListener('close', () => {
+      this.onDisconnect();
+    });
+
+    this.socket.addEventListener('error', (err) => {
+      this.onError(err);
+    });
+
+    this.socket.addEventListener('message', (message) => {
+      this.onMessage(message);
+    });
   }
 
   onError(err) {
@@ -71,7 +86,7 @@ export default class Socket {
 
   debug(message) {
     if( this.options.debug === true ) {
-      console.log(message);
+      console.log("ws::debug", ...arguments);
     }
   }
 }
