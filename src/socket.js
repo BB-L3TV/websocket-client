@@ -19,6 +19,15 @@ export default class Socket extends Emit {
 
   connect(opts) {
 
+    // set our own value as to not mutate the users wishes
+    if( !this.reconnect ) {
+      this.reconnect = this.options.reconnect || false;
+    }
+
+    if( !this.reconnectionAttempt ) {
+      this.reconnectionAttempt = 0;
+    }
+
     // @TODO add error handleing around protocols
     this.socket = new WebSocket(opts.url);
 
@@ -33,7 +42,29 @@ export default class Socket extends Emit {
 
   disconnect() {
 
+    this.reconnect = false; // prevent the reconnect logic
     this.socket.close();
+  }
+
+  shouldAttemptReconnect() {
+    if( this.reconnect = false ) {
+      return false;
+    }
+
+    let raOption;
+
+    if( this.options.hasOwnProperty('reconnectTries') ) {
+      let raOption = parseInt(this.options.reconnectTries, 10);
+      
+      if( isNaN(raOption) ) {
+        return true;
+      }
+      else if( raOption > this.reconnectionAttempt ) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   // TODO add support for encoding different message types
@@ -46,7 +77,9 @@ export default class Socket extends Emit {
   onMessage(message) {
     this.debug("Message Received", message);
 
-    let ce = new CustomEvent('socket::message', message);
+    // @TODO determine if we need to strip any of the message event data beore
+    // creating custom event
+    let ce = new CustomEvent('socket::message', {detail: message});
     this.dispatchEvent(ce);
   }
 
@@ -75,12 +108,14 @@ export default class Socket extends Emit {
     this.debug("Disconnected");
 
     //handle reconnect logic
-    if(this.options.reconnect === true) {
+    if(this.shouldAttemptReconnect() === true) {
       this.debug('Attempting Reconnect');
 
-      setTimeout(function() {
+      setTimeout(() => {
+        this.reconnectionAttempt += 1;
+
         this.connect(this.options);
-      }.bind(this), this.options.reconnectWait || 0);
+      }, this.options.reconnectWait || 0);
     }
   }
 
