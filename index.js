@@ -1,1 +1,1 @@
-require('./src/websocket.js');
+require('./src/socket.js');
