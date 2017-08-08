@@ -24,8 +24,8 @@ export default class Socket extends Emit {
       this.reconnect = this.options.reconnect || false;
     }
 
-    if( !this.reconnectionAttempt ) {
-      this.reconnectionAttempt = 0;
+    if( !this.reconnectionAttempts ) {
+      this.reconnectionAttempts = 0;
     }
 
     // @TODO add error handleing around protocols
@@ -59,7 +59,7 @@ export default class Socket extends Emit {
       if( isNaN(raOption) ) {
         return true;
       }
-      else if( raOption > this.reconnectionAttempt ) {
+      else if( raOption > this.reconnectionAttempts ) {
         return false;
       }
     }
@@ -79,12 +79,15 @@ export default class Socket extends Emit {
 
     // @TODO determine if we need to strip any of the message event data beore
     // creating custom event
-    let ce = new CustomEvent('socket::message', {detail: message});
+    let ce = new CustomEvent('message', {detail: message});
     this.dispatchEvent(ce);
   }
 
   onConnect() {
     this.debug('connection established, onConnect called');
+
+    let ce = new Event('socket::connect');
+    this.dispatchEvent(ce);
 
     // setup the rest of our event handlers
     this.socket.addEventListener('close', () => {
@@ -101,18 +104,24 @@ export default class Socket extends Emit {
   }
 
   onError(err) {
-    console.error("Socket Error", err);
+    this.debug('error', err);
+
+    let ce = new CustomEvent('socket::error', {detail: err});
+    this.dispatchEvent(ce);
   }
 
   onDisconnect() {
     this.debug("Disconnected");
+
+    let ce = new Event('socket::disconnect');
+    this.dispatchEvent(ce);
 
     //handle reconnect logic
     if(this.shouldAttemptReconnect() === true) {
       this.debug('Attempting Reconnect');
 
       setTimeout(() => {
-        this.reconnectionAttempt += 1;
+        this.reconnectionAttempts += 1;
 
         this.connect(this.options);
       }, this.options.reconnectWait || 0);
