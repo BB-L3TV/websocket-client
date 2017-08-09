@@ -79,7 +79,7 @@ export default class Socket extends Emit {
 
     // @TODO determine if we need to strip any of the message event data beore
     // creating custom event
-    let ce = new CustomEvent('message', {detail: message});
+    let ce = new CustomEvent('socket::message', {detail: message});
     this.dispatchEvent(ce);
   }
 
