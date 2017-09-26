@@ -2,8 +2,10 @@
   "name": "websocket-client",
   "version": "0.1.0",
   "description": "Wrapper for browser based WebSocket class",
-  "main": "index.js",
+  "main": "lib/socket-client.js",
   "scripts": {
+    "build": "webpack --env.prod",
+    "build:dev": "webpack --watch --progress",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -19,5 +21,14 @@
   "bugs": {
     "url": "https://github.com/BB-L3TV/websocket-client/issues"
   },
-  "homepage": "https://github.com/BB-L3TV/websocket-client#readme"
+  "homepage": "https://github.com/BB-L3TV/websocket-client#readme",
+  "devDependencies": {
+    "babel-cli": "6.24.1",
+    "babel-core": "^6.26.0",
+    "babel-eslint": "7.2.3",
+    "babel-loader": "^7.1.2",
+    "babel-plugin-add-module-exports": "0.2.1",
+    "babel-preset-env": "^1.6.0",
+    "webpack": "^3.6.0"
+  }
 }
