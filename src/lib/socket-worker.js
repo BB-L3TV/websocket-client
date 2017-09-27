@@ -28,6 +28,11 @@ onmessage = (message) => {
     });
 
   }
+  // If we have socket object then lets send the message
+  else if( socket ) {
+    let data = messageData.data;
+    socket.sendMessage(data);
+  }
 };
 
 function passMessageToCaller(type, data) {

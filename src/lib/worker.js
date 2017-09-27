@@ -1,32 +1,40 @@
 import Events from 'ampersand-events';
-import Worker from 'worker-loader?inline&name=socket-worker[hash].js!./socket-worker.js';
+import Worker from 'worker-loader?inline&name=socket-worker.[hash].js!./socket-worker.js';
 
-var emitter = {};
-Events.createEmitter(emitter);
+export default class SocketWorker {
+  constructor(socketOptions) {
+    if( !socketOptions ) {
+      throw new Error('no options passed to SocketWorker');
+      return;
+    }
 
-function messageHandler($e) {
-  let messageObj = $e.data;
-  let eventName = messageObj.type;
-  let data = messageObj.data;
+    Events.createEmitter(this);
 
-  emitter.trigger(eventName, data);
-}
+    this.worker = new Worker();
+    this.worker.onmessage = this.messageHandler.bind(this);
 
-export default function SocketWorker(socketOptions) {
-  if( !window.Worker ) {
-    throw new Error("no Worker object found on window");
-    return;
+    let optionsMessage = { 
+      'type' : 'options',
+      'data': socketOptions
+    };
+
+    this.worker.postMessage(optionsMessage);
   }
 
-  let socketWorker = new Worker();
-  socketWorker.onmessage = messageHandler;
+  messageHandler($e) {
+    let messageObj = $e.data;
+    let eventName = messageObj.type;
+    let data = messageObj.data;
 
-  let optionsMessage = { 
-    'type' : 'options',
-    'data': socketOptions
-  };
+    this.trigger(eventName, data);
+  }
 
-  socketWorker.postMessage(optionsMessage);
+  sendMessage(message) {
+    let messageObj = {
+      type: 'generic',
+      data: message
+    }
 
-  return emitter;
+    this.worker.postMessage(messageObj);
+  }
 }
