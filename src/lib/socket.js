@@ -1,10 +1,8 @@
-import Emit from './emit';
+import Events from 'ampersand-events';
 
-export default class Socket extends Emit {
+export default class Socket {
 
   constructor(opts) {
-    super();
-
     this.options = opts || {};
 
     // if the user doesn't pass autoconnect then default it to true
@@ -15,6 +13,8 @@ export default class Socket extends Emit {
     if(this.options.autoConnect === true) {
       this.connect(this.options);
     }
+
+    Events.createEmitter(this);
   }
 
   connect(opts) {
@@ -78,16 +78,13 @@ export default class Socket extends Emit {
     this.debug("Message Received", message);
 
     // @TODO determine if we need to strip any of the message event data beore
-    // creating custom event
-    let ce = new CustomEvent('socket::message', {detail: message});
-    this.dispatchEvent(ce);
+    this.trigger('socket::message', message);
   }
 
   onConnect() {
     this.debug('connection established, onConnect called');
 
-    let ce = new Event('socket::connect');
-    this.dispatchEvent(ce);
+    this.trigger('socket::connect');
 
     // setup the rest of our event handlers
     this.socket.addEventListener('close', () => {
@@ -106,15 +103,13 @@ export default class Socket extends Emit {
   onError(err) {
     this.debug('error', err);
 
-    let ce = new CustomEvent('socket::error', {detail: err});
-    this.dispatchEvent(ce);
+    this.trigger('socket::error', {detail: err});
   }
 
   onDisconnect() {
     this.debug("Disconnected");
 
-    let ce = new Event('socket::disconnect');
-    this.dispatchEvent(ce);
+    this.trigger('socket::disconnect');
 
     //handle reconnect logic
     if(this.shouldAttemptReconnect() === true) {
