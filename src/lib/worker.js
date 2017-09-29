@@ -24,9 +24,8 @@ export default class SocketWorker {
   messageHandler($e) {
     let messageObj = $e.data;
     let eventName = messageObj.type;
-    let data = messageObj.data;
 
-    this.trigger(eventName, data);
+    this.trigger(eventName, messageObj);
   }
 
   sendMessage(message) {
