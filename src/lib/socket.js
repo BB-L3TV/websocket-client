@@ -18,7 +18,6 @@ export default class Socket {
   }
 
   connect(opts) {
-
     // set our own value as to not mutate the users wishes
     if( !this.reconnect ) {
       this.reconnect = this.options.reconnect || false;
@@ -31,10 +30,16 @@ export default class Socket {
     // @TODO add error handleing around protocols
     this.socket = new WebSocket(opts.url);
 
+    this.debug("Socket", this.socket);
+
+    this.socket.addEventListener('error', this.connectionError.bind(this));
+
     if(typeof this.onConnect === "function") {
       this.socket.addEventListener('open', () => {
+        this.socket.removeEventListener('error', this.connectionError.bind(this));  //remove the connect error listener
         this.onConnect();
       });
+
     }
 
     return this;
@@ -46,8 +51,12 @@ export default class Socket {
     this.socket.close();
   }
 
+  setDebugging(mode) {
+    this.options.debug = !!mode;
+  }
+
   shouldAttemptReconnect() {
-    if( this.reconnect = false ) {
+    if( this.reconnect === false ) {
       return false;
     }
 
@@ -57,9 +66,9 @@ export default class Socket {
       let raOption = parseInt(this.options.reconnectTries, 10);
       
       if( isNaN(raOption) ) {
-        return true;
+        return false;
       }
-      else if( raOption > this.reconnectionAttempts ) {
+      else if( raOption < this.reconnectionAttempts ) {
         return false;
       }
     }
@@ -69,15 +78,19 @@ export default class Socket {
 
   // TODO add support for encoding different message types
   sendMessage(message) {
-    this.debug("Sending Message", message);
+    if( this.socket.readyState !== this.socket.OPEN ) {
+      this.debug('NOT sending message, socket not open', message);
+      return false;
+    }
 
-    this.socket.send(message);
+    this.debug('Sending Message', message);
+
+    return this.socket.send(message);
   }
 
   onMessage(message) {
     this.debug("Message Received", message);
 
-    // @TODO determine if we need to strip any of the message event data beore
     this.trigger('socket::message', message);
   }
 
@@ -91,26 +104,32 @@ export default class Socket {
       this.onDisconnect();
     });
 
-    this.socket.addEventListener('error', (err) => {
-      this.onError(err);
-    });
-
     this.socket.addEventListener('message', (message) => {
       this.onMessage(message);
     });
   }
 
+  connectionError(error) {
+    this.debug('Connection Error', error);
+
+    this._reconnect();
+  }
+
   onError(err) {
-    this.debug('error', err);
+    this.debug('error handler called from socket event', err);
 
     this.trigger('socket::error', {detail: err});
   }
 
   onDisconnect() {
-    this.debug("Disconnected");
+    this.debug('Disconnected');
 
     this.trigger('socket::disconnect');
 
+    this._reconnect();
+  }
+
+  _reconnect() {
     //handle reconnect logic
     if(this.shouldAttemptReconnect() === true) {
       this.debug('Attempting Reconnect');
