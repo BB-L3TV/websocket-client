@@ -28,6 +28,10 @@ onmessage = (message) => {
     });
 
   }
+  else if( socket && messageData.type === 'debugging' ) {
+    let mode = messageData.data;
+    socket.setDebugging(mode);
+  }
   // If we have socket object then lets send the message
   else if( socket ) {
     let data = messageData.data;

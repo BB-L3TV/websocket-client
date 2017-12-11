@@ -36,4 +36,13 @@ export default class SocketWorker {
 
     this.worker.postMessage(messageObj);
   }
+
+  setDebugging(mode) {
+    let messageObj = {
+      type: 'debugging',
+      data: mode
+    }
+
+    this.worker.postMessage(messageObj);
+  }
 }
