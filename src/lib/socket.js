@@ -69,6 +69,7 @@ export default class Socket {
         return false;
       }
       else if( raOption < this.reconnectionAttempts ) {
+        this.trigger('socket::reconnect::exhausted');
         return false;
       }
     }
@@ -97,7 +98,8 @@ export default class Socket {
   onConnect() {
     this.debug('connection established, onConnect called');
 
-    this.trigger('socket::connect');
+    this.reconnectionAttempts = null;
+    this.currentReconnectWait = null;
 
     // setup the rest of our event handlers
     this.socket.addEventListener('close', () => {
@@ -107,6 +109,8 @@ export default class Socket {
     this.socket.addEventListener('message', (message) => {
       this.onMessage(message);
     });
+
+    this.trigger('socket::connect');
   }
 
   connectionError(error) {
@@ -132,14 +136,29 @@ export default class Socket {
   _reconnect() {
     //handle reconnect logic
     if(this.shouldAttemptReconnect() === true) {
-      this.debug('Attempting Reconnect');
+      let wait = this.getReconnectWait();
+
+      this.debug(`Attempting Reconnect in ${wait}ms, Attempts Made: ${this.reconnectionAttempts}`);
 
       setTimeout(() => {
         this.reconnectionAttempts += 1;
 
         this.connect(this.options);
-      }, this.options.reconnectWait || 0);
+      }, wait);
     }
+  }
+
+  getReconnectWait() {
+    let rwi = isNaN(parseInt(this.options.reconnectWaitIncrement, 10)) ? 0 : parseInt(this.options.reconnectWaitIncrement, 10);
+
+    if( this.currentReconnectWait ) {
+      this.currentReconnectWait += rwi;
+    }
+    else {
+      this.currentReconnectWait = this.options.reconnectWait || 0;
+    }
+
+    return this.currentReconnectWait;
   }
 
   debug(message) {
