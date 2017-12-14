@@ -11,6 +11,7 @@ onmessage = (message) => {
   if( !socket && messageData.type === 'options') {
     socket = new Socket(messageData.data);
 
+    // @TODO rework to use all events and just pass through
     socket.on('socket::connect', ($e) => {
       passMessageToCaller('socket::connect', {});
     });
@@ -25,6 +26,10 @@ onmessage = (message) => {
 
     socket.on('socket::message', ($e) => {
       passMessageToCaller('socket::message', $e.data);
+    });
+
+    socket.on('socket::reconnect::exhausted', ($e) => {
+      passMessageToCaller('socket::reconnect::exhausted', $e);
     });
 
   }
