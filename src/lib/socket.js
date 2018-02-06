@@ -161,9 +161,29 @@ export default class Socket {
     return this.currentReconnectWait;
   }
 
-  debug(message) {
-    if( this.options.debug === true ) {
+  debug(label, message) {
+    if( this.options.debug !== true ) return false;
+
+    if( !this.debugExcludeMessage(message) ) {
       console.log("ws::debug", ...arguments);
+    }
+  }
+
+  debugExcludeMessage(message) {
+    if( !message || !this.options.debugExclude ) return false;
+
+    let ex = this.options.debugExclude;
+
+    if( typeof ex === 'object' ) {
+      for( let key in ex ) {
+        if( !message[key] ) return false;
+
+        let rex = ex[key];
+        return rex.test(message[key]);
+      }
+    }
+    else if( typeof ex === 'string' ) {
+      return ex.test(message);
     }
   }
 }
