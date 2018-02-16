@@ -1,15 +1,25 @@
 'use strict';
 
 import Socket from './socket.js';
+import Serializer from './serializers';
 
 let socket;
+let serializer = new Serializer();
 
 onmessage = (message) => {
 
   let messageData = message.data || {};
 
   if( !socket && messageData.type === 'options') {
-    socket = new Socket(messageData.data);
+    if( messageData.serializationMode ) {
+      serializer = new Serializer(messageData.serializationMode);
+    }
+
+    let options = serializer.deserialize(messageData.data)
+
+    let socketOptions = options.socketOptions;
+
+    socket = new Socket(socketOptions);
 
     // @TODO rework to use all events and just pass through
     socket.on('socket::connect', ($e) => {
@@ -34,17 +44,18 @@ onmessage = (message) => {
 
   }
   else if( socket && messageData.type === 'debugging' ) {
-    let mode = messageData.data;
+    let mode = serializer.deserialize(messageData.data);
     socket.setDebugging(mode);
   }
   // If we have socket object then lets send the message
   else if( socket ) {
-    let data = messageData.data;
+    let data = serializer.deserialize(messageData.data);
     socket.sendMessage(data);
   }
 };
 
 function passMessageToCaller(type, data) {
-  let messageObj = {type: type, data: data};
+  let retData = serializer.serialize(data);
+  let messageObj = {type: type, data: retData};
   postMessage(messageObj);
 }
