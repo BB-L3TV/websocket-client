@@ -176,9 +176,9 @@ export default class Socket {
 
     if( typeof ex === 'object' ) {
       for( let key in ex ) {
-        if( !message[key] ) return false;
+        if( !message[key] || typeof ex[key] !== 'string' ) return false;
 
-        let rex = ex[key];
+        let rex = new RegExp(ex[key], 'i');
         return rex.test(message[key]);
       }
     }
