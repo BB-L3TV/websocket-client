@@ -1,6 +1,6 @@
 {
   "name": "websocket-client",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Wrapper for browser based WebSocket class",
   "main": "lib/socket-client.js",
   "scripts": {
